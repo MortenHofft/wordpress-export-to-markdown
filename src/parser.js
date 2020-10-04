@@ -48,7 +48,9 @@ function collectPosts(data, config) {
 			},
 			frontmatter: {
 				title: getPostTitle(post),
-				date: getPostDate(post)
+        date: getPostDate(post),
+        tag: getCategoriesByDomain(post, 'post_tag'),
+        category: getCategoriesByDomain(post, 'category'),
 			},
 			content: translator.getPostContent(post, turndownService, config)
 		}));
@@ -81,6 +83,27 @@ function getPostTitle(post) {
 
 function getPostDate(post) {
 	return luxon.DateTime.fromRFC2822(post.pubDate[0], { zone: 'utc' }).toISODate();
+}
+
+function getCategoriesByDomain(post, domain) {
+  /*
+  WordPress has a category field with following structure
+  [{
+    "_": "Your category name",
+    "$": {
+      "domain": "post_tag", // or some other domain. e.g. category
+      "nicename": "your-category-name"
+    }
+  }, ...]
+  */
+  if (Array.isArray(post.category)) {
+    const categories = post.category
+      .filter(category => category.$.domain === domain)
+      .map(category => category._.toString())
+      .map(category => category.replace(/"'/g, ''))
+      .map(category => category.includes("#") ? `"${category}"` : category);
+    return categories;
+  }
 }
 
 function collectAttachedImages(data) {

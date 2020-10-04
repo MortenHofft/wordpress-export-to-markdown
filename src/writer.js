@@ -57,10 +57,18 @@ async function writeMarkdownFilesPromise(posts, config ) {
 async function loadMarkdownFilePromise(post) {
 	let output = '---\n';
 	Object.entries(post.frontmatter).forEach(pair => {
-		const key = pair[0];
-		const value = (pair[1] || '').replace(/"/g, '\\"');
-		output += key + ': "' + value + '"\n';
-	});
+    const key = pair[0];
+    if (typeof pair[1] === 'undefined') return;
+
+    if (Array.isArray(pair[1])) {
+      const value = JSON.stringify(pair[1]);
+      output += key + ': ' + value + '\n';
+    } else {
+      const value = (pair[1] || '').replace(/"/g, '\\"');
+      output += key + ': "' + value + '"\n';
+    }
+  });
+  
 	output += '---\n\n' + post.content + '\n';
 	return output;
 }
